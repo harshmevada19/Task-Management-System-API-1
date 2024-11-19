@@ -2,7 +2,8 @@
 {
     public class Role
     {
-        public string RoleId { get; set; }  // e.g., "Admin", "User"
-        public string RoleName { get; set; }
+        public int RoleId { get; set; }      
+        public string RoleName { get; set; }  // Example: "Admin", "User"
+        public bool IsActive { get; set; }    
     }
 }

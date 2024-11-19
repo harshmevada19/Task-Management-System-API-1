@@ -1,11 +1,9 @@
-﻿namespace Task_Management_System_API_1.ViewModels
+﻿using System;
+using System.Collections.Generic;
+
+public class UserViewModel
 {
-    public class UserViewModel
-    {
-        public string UserId { get; set; }
-        public string Username { get; set; }
-        public string Email { get; set; }
-        public string Role { get; set; }
-        public bool IsActive { get; set; }
-    }
+    public string name { get; set; }
+    public bool IsActive { get; set; } = true;
+    public ICollection<Task> Tasks { get; set; }
 }

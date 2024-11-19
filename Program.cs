@@ -5,7 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using Task_Management_System_API_1.Data;
+using Task_Management_System_API_1.Services;
+using Task_Management_System_API_1.Repositories;
 
 namespace Task_Management_System_API_1
 {
@@ -23,8 +26,6 @@ namespace Task_Management_System_API_1
             }
 
             var key = Encoding.UTF8.GetBytes(jwtKey);
-
-            // Add services to the container
 
             // Configure Authentication and JWT Bearer middleware
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -50,6 +51,15 @@ namespace Task_Management_System_API_1
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("TaskDBLocalConnection")));
 
+            // Register AutoMapper
+            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+            //Add Services
+            builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+            builder.Services.AddScoped<IAdminService, AdminService>();
+            builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+            builder.Services.AddScoped<ITaskService, TaskService>();
+
             // Add Controllers
             builder.Services.AddControllers();
 
@@ -65,7 +75,7 @@ namespace Task_Management_System_API_1
                     Name = "Authorization",
                     Type = SecuritySchemeType.ApiKey,
                     Scheme = "Bearer",
-                });
+                }); 
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {

@@ -12,8 +12,8 @@ using Task_Management_System_API_1.Data;
 namespace Task_Management_System_API_1.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241111090542_Initial")]
-    partial class Initial
+    [Migration("20241114083756_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -89,11 +89,6 @@ namespace Task_Management_System_API_1.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(21)
-                        .HasColumnType("nvarchar(21)");
-
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -145,10 +140,6 @@ namespace Task_Management_System_API_1.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-
-                    b.HasDiscriminator().HasValue("IdentityUser");
-
-                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
@@ -232,55 +223,11 @@ namespace Task_Management_System_API_1.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Task_Management_System_API_1.Entity_Models.AuditLog", b =>
+            modelBuilder.Entity("Task", b =>
                 {
-                    b.Property<int>("AuditLogId")
+                    b.Property<Guid>("TaskId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditLogId"));
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("ActionTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("AuditLogId");
-
-                    b.ToTable("AuditLogs");
-                });
-
-            modelBuilder.Entity("Task_Management_System_API_1.Entity_Models.Role", b =>
-                {
-                    b.Property<string>("RoleId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("RoleId");
-
-                    b.ToTable("Roles");
-                });
-
-            modelBuilder.Entity("Task_Management_System_API_1.Entity_Models.TaskItem", b =>
-                {
-                    b.Property<int>("TaskId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TaskId"));
-
-                    b.Property<string>("AssignedUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -297,46 +244,51 @@ namespace Task_Management_System_API_1.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("TaskId");
 
-                    b.HasIndex("AssignedUserId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Tasks");
                 });
 
             modelBuilder.Entity("Task_Management_System_API_1.Entity_Models.UserTask", b =>
                 {
-                    b.Property<int>("UserTaskId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserTaskId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("TaskId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("UserTaskId");
-
-                    b.HasIndex("TaskId");
-
-                    b.HasIndex("UserId");
+                    b.HasKey("Id");
 
                     b.ToTable("UserTasks");
                 });
 
-            modelBuilder.Entity("Task_Management_System_API_1.Entity_Models.ApplicationUser", b =>
+            modelBuilder.Entity("User", b =>
                 {
-                    b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
+                    b.Property<Guid>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Role")
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasDiscriminator().HasValue("ApplicationUser");
+                    b.HasKey("UserId");
+
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -390,34 +342,20 @@ namespace Task_Management_System_API_1.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Task_Management_System_API_1.Entity_Models.TaskItem", b =>
+            modelBuilder.Entity("Task", b =>
                 {
-                    b.HasOne("Task_Management_System_API_1.Entity_Models.ApplicationUser", "AssignedUser")
-                        .WithMany()
-                        .HasForeignKey("AssignedUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AssignedUser");
-                });
-
-            modelBuilder.Entity("Task_Management_System_API_1.Entity_Models.UserTask", b =>
-                {
-                    b.HasOne("Task_Management_System_API_1.Entity_Models.TaskItem", "Task")
-                        .WithMany()
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Task_Management_System_API_1.Entity_Models.ApplicationUser", "User")
-                        .WithMany()
+                    b.HasOne("User", "User")
+                        .WithMany("Tasks")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Task");
-
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("User", b =>
+                {
+                    b.Navigation("Tasks");
                 });
 #pragma warning restore 612, 618
         }

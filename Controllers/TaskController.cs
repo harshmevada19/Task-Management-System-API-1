@@ -2,101 +2,101 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using Task_Management_System_API_1;
 using Task_Management_System_API_1.Data;
 using Task_Management_System_API_1.Entity_Models;
-using Task_Management_System_API_1.ViewModels;
+using Task_Management_System_API_1.Services;
 
 [ApiController]
 [Route("api/[controller]")]
 public class TaskController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly ITaskService _taskService;
+    private readonly ApplicationDbContext _applicationDbContext;
 
-    public TaskController(ApplicationDbContext context)
+    public TaskController(ITaskService taskService, ApplicationDbContext applicationDbContext)
     {
-        _context = context;
+        _taskService = taskService;
+        _applicationDbContext = applicationDbContext;
     }
 
-    [HttpGet("GetAll")]
-    public IActionResult GetAllTasks()
-    {
-        // Retrieve the current user's ID
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        // Get tasks based on the user's role
-        var tasks = User.IsInRole("Admin")
-            ? _context.Tasks.AsNoTracking().ToList()
-            : _context.Tasks.Where(t => t.AssignedUserId == userId).AsNoTracking().ToList();
-
-        // Check if tasks are found
-        if (tasks == null || !tasks.Any())
-        {
-            return NotFound("No tasks found.");
-        }
-
-        return Ok(tasks);
-    }
-
-    [HttpPost("Create")]
+    [HttpPost]
     [Authorize]
     public async Task<IActionResult> CreateTask([FromBody] TaskViewModel model)
     {
-        if (!ModelState.IsValid)
+        
+        try
         {
-            return BadRequest(ModelState);
+            if (_applicationDbContext == null)
+            {
+                return StatusCode(500, "Database context is not available.");
+            }
+
+            var userId = model.UserId;
+            var userRole = await _applicationDbContext.Users
+            .Where(u => u.UserId == userId) 
+            .Select(u => u.Role)           
+            .FirstOrDefaultAsync();
+
+            // Check if the user has a role assigned and it matches "Admin" (RoleId = 1)
+            if (userRole == 1) // Check if the role is "Admin"
+            {
+                var task = await _taskService.CreateTask(model, userId);
+                //var userTask = new UserTask
+                //{
+                //    UserId = userId,
+                //    TaskId = task.TaskId // Assuming task has TaskId
+                //};
+                //_applicationDbContext.UserTasks.Add(userTask);
+                //await _applicationDbContext.SaveChangesAsync();
+                return Ok(task);
+            }
+            else if (userRole == 2) // Check if the role is "User"
+            {
+                return Unauthorized("Users are not authorized to create a task.");
+            }
+            else
+            {
+                return Unauthorized("You are not authorized to create a task.");
+            }
         }
-
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null) return Unauthorized();
-
-        var task = new TaskItem
+        catch (Exception ex)
         {
-            Title = model.Title,
-            Description = model.Description,
-            DueDate = model.DueDate,
-            Status = model.Status,
-            AssignedUserId = userId
-        };
-
-        _context.Tasks.Add(task);
-        await _context.SaveChangesAsync();
-        return Ok("Task created successfully");
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 
-    [HttpPut("{id}")]
-    [Authorize]
-    public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskViewModel model)
+    [HttpPut("{taskId}")]
+    public async Task<IActionResult> UpdateTask(Guid taskId, [FromBody] TaskViewModel model)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        var task = await _context.Tasks.FindAsync(id);
-        if (task == null) return NotFound();
+        if (userId == null)
+            return Unauthorized();
 
-        if (task.AssignedUserId != User.FindFirstValue(ClaimTypes.NameIdentifier) && !User.IsInRole("Admin"))
-            return Forbid();
-
-        task.Title = model.Title;
-        task.Description = model.Description;
-        task.DueDate = model.DueDate;
-        task.Status = model.Status;
-
-        await _context.SaveChangesAsync();
-        return Ok("Task updated successfully");
+        try
+        {
+            var updatedTask = await _taskService.UpdateTask(taskId, model, Guid.Parse(userId));
+            return Ok(updatedTask);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 
-
-    [HttpDelete("{id,Delete}")]
-    public async Task<IActionResult> DeleteTask(int id)
+    [HttpDelete("{taskId}")]
+    public async Task<IActionResult> DeleteTask(Guid taskId)
     {
-        var task = await _context.Tasks.FindAsync(id);
-        if (task == null) return NotFound();
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        if (task.AssignedUserId != User.FindFirstValue(ClaimTypes.NameIdentifier) && !User.IsInRole("Admin"))
-            return Forbid();
+        if (userId == null)
+            return Unauthorized();
 
-        _context.Tasks.Remove(task);
-        await _context.SaveChangesAsync();
-        return Ok("Task deleted successfully");
+        var success = await _taskService.DeleteTask(taskId, Guid.Parse(userId));
+
+        if (!success)
+            return NotFound();
+
+        return NoContent();
     }
 }
