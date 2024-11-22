@@ -18,32 +18,32 @@ namespace Task_Management_System_API_1.Services
             _mapper = mapper;
         }
 
-        public async Task<User> CreateUserAsync(User user)
-        {
-            return await _adminRepository.CreateUserAsync(user);
-        }
+        //public async Task<User> CreateUserAsync(User user)
+        //{
+        //    return await _adminRepository.CreateUserAsync(user);
+        //}
 
-        public async Task<User> GetUserByIdAsync(Guid userId)
-        {
-            return await _adminRepository.GetUserByIdAsync(userId);
-        }
+        //public async Task<User> GetUserByIdAsync(Guid userId)
+        //{
+        //    return await _adminRepository.GetUserByIdAsync(userId);
+        //}
 
-        public async Task<List<TaskViewModel>> GetAllTasksAsync()
-        {
-            var tasks = await _adminRepository.GetAllTasksAsync();
-            return _mapper.Map<List<TaskViewModel>>(tasks);
-        }
+        //public async Task<List<TaskViewModel>> GetAllTasksAsync()
+        //{
+        //    var tasks = await _adminRepository.GetAllTasksAsync();
+        //    return _mapper.Map<List<TaskViewModel>>(tasks);
+        //}
 
-        public async Task<Task> AssignTaskAsync(TaskViewModel model)
-        {
-            var userExists = await _adminRepository.UserExistsAsync(model.UserId);
-            if (!userExists) return null;
+        //public async Task<Task> AssignTaskAsync(TaskViewModel model)
+        //{
+        //    var userExists = await _adminRepository.UserExistsAsync(model.UserId);
+        //    if (!userExists) return null;
 
-            var task = _mapper.Map<Task>(model);
-            task.TaskId = Guid.NewGuid();
+        //    var task = _mapper.Map<Task>(model);
+        //    task.TaskId = Guid.NewGuid();
 
-            return await _adminRepository.AssignTaskAsync(task);
-        }
+        //    return await _adminRepository.AssignTaskAsync(task);
+        //}
 
         public async Task<bool> DeactivateUserAsync(Guid userId)
         {

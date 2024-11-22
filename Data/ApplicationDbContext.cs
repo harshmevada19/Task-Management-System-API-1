@@ -10,8 +10,8 @@ namespace Task_Management_System_API_1.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
-        public DbSet<User> Users { get; set; }
         public DbSet<Task> Tasks { get; set; }
         public DbSet<UserTask> UserTasks { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
     }
 }

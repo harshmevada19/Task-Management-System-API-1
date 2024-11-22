@@ -19,84 +19,84 @@ public class TaskController : ControllerBase
         _applicationDbContext = applicationDbContext;
     }
 
-    [HttpPost]
-    [Authorize]
-    public async Task<IActionResult> CreateTask([FromBody] TaskViewModel model)
-    {
+    //[HttpPost]
+    //[Authorize]
+    //public async Task<IActionResult> CreateTask([FromBody] TaskViewModel model)
+    //{
         
-        try
-        {
-            if (_applicationDbContext == null)
-            {
-                return StatusCode(500, "Database context is not available.");
-            }
+    //    try
+    //    {
+    //        if (_applicationDbContext == null)
+    //        {
+    //            return StatusCode(500, "Database context is not available.");
+    //        }
 
-            var userId = model.UserId;
-            var userRole = await _applicationDbContext.Users
-            .Where(u => u.UserId == userId) 
-            .Select(u => u.Role)           
-            .FirstOrDefaultAsync();
+    //        var userId = model.CreatedBy;
+    //        var userRole = await _applicationDbContext.Users
+    //        .Where(u => u.UserId == userId) 
+    //        .Select(u => u.Role)           
+    //        .FirstOrDefaultAsync();
 
-            // Check if the user has a role assigned and it matches "Admin" (RoleId = 1)
-            if (userRole == 1) // Check if the role is "Admin"
-            {
-                var task = await _taskService.CreateTask(model, userId);
-                //var userTask = new UserTask
-                //{
-                //    UserId = userId,
-                //    TaskId = task.TaskId // Assuming task has TaskId
-                //};
-                //_applicationDbContext.UserTasks.Add(userTask);
-                //await _applicationDbContext.SaveChangesAsync();
-                return Ok(task);
-            }
-            else if (userRole == 2) // Check if the role is "User"
-            {
-                return Unauthorized("Users are not authorized to create a task.");
-            }
-            else
-            {
-                return Unauthorized("You are not authorized to create a task.");
-            }
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
-    }
+    //        // Check if the user has a role assigned and it matches "Admin" (RoleId = 1)
+    //        if (userRole == 1) // Check if the role is "Admin"
+    //        {
+    //            var task = await _taskService.CreateTask(model, userId);
+    //            //var userTask = new UserTask
+    //            //{
+    //            //    UserId = userId,
+    //            //    TaskId = task.TaskId // Assuming task has TaskId
+    //            //};
+    //            //_applicationDbContext.UserTasks.Add(userTask);
+    //            //await _applicationDbContext.SaveChangesAsync();
+    //            return Ok(task);
+    //        }
+    //        else if (userRole == 2) // Check if the role is "User"
+    //        {
+    //            return Unauthorized("Users are not authorized to create a task.");
+    //        }
+    //        else
+    //        {
+    //            return Unauthorized("You are not authorized to create a task.");
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return StatusCode(500, $"Internal server error: {ex.Message}");
+    //    }
+    //}
 
-    [HttpPut("{taskId}")]
-    public async Task<IActionResult> UpdateTask(Guid taskId, [FromBody] TaskViewModel model)
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    //[HttpPut("{taskId}")]
+    //public async Task<IActionResult> UpdateTask(Guid taskId, [FromBody] TaskViewModel model)
+    //{
+    //    var jh = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        if (userId == null)
-            return Unauthorized();
+    //    if (jh == null)
+    //        return Unauthorized();
 
-        try
-        {
-            var updatedTask = await _taskService.UpdateTask(taskId, model, Guid.Parse(userId));
-            return Ok(updatedTask);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
-    }
+    //    try
+    //    {
+    //        var updatedTask = await _taskService.UpdateTask(taskId, model, Guid.Parse(jh));
+    //        return Ok(updatedTask);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return StatusCode(500, $"Internal server error: {ex.Message}");
+    //    }
+    //}
 
-    [HttpDelete("{taskId}")]
-    public async Task<IActionResult> DeleteTask(Guid taskId)
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    //[HttpDelete("{taskId}")]
+    //public async Task<IActionResult> DeleteTask(Guid taskId)
+    //{
+    //    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        if (userId == null)
-            return Unauthorized();
+    //    if (userId == null)
+    //        return Unauthorized();
 
-        var success = await _taskService.DeleteTask(taskId, Guid.Parse(userId));
+    //    var success = await _taskService.DeleteTask(taskId, Guid.Parse(userId));
 
-        if (!success)
-            return NotFound();
+    //    if (!success)
+    //        return NotFound();
 
-        return NoContent();
-    }
+    //    return NoContent();
+    //}
 }

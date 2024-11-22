@@ -44,8 +44,11 @@ namespace Task_Management_System_API_1
                 };
             });
 
-            builder.Services.AddIdentityApiEndpoints<IdentityUser>().AddEntityFrameworkStores<ApplicationDbContext>()
-            .AddDefaultTokenProviders().AddApiEndpoints();
+            builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+                    .AddRoles<IdentityRole>()
+                    .AddEntityFrameworkStores<ApplicationDbContext>()
+                    .AddDefaultTokenProviders()
+                    .AddApiEndpoints();
 
             // Add DbContext for ApplicationDbContext
             builder.Services.AddDbContext<ApplicationDbContext>(options =>

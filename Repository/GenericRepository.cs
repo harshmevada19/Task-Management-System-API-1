@@ -17,12 +17,12 @@ namespace Task_Management_System_API_1.Repositories
             _dbSet = context.Set<T>();
         }
 
-        public async Task<T> CreateAsync(T entity)
-        {
-            await _dbSet.AddAsync(entity);
-            await _context.SaveChangesAsync();
-            return entity;
-        }
+        //public async Task<T> CreateAsync(T entity)
+        //{
+        //    await _dbSet.AddAsync(entity);
+        //    await _context.SaveChangesAsync();
+        //    return entity;
+        //}
 
         public async Task<T> GetByIdAsync(Guid id)
         {

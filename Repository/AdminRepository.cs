@@ -3,10 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Task_Management_System_API_1.Data;
+using Task_Management_System_API_1.Entity_Models;
 
 namespace Task_Management_System_API_1.Repositories
 {
-    public class AdminRepository : GenericRepository<User>, IAdminRepository
+    public class AdminRepository : GenericRepository<UserTask>, IAdminRepository
     {
         private readonly ApplicationDbContext _context;
 
@@ -15,28 +16,28 @@ namespace Task_Management_System_API_1.Repositories
             _context = context;
         }
 
-        public async Task<User> CreateUserAsync(User user)
-        {
-            user.UserId = Guid.NewGuid();
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
-            return user;
-        }
+        //public async Task<User> CreateUserAsync(User user)
+        //{
+        //    user.UserId = Guid.NewGuid();
+        //    await _context.Users.AddAsync(user);
+        //    await _context.SaveChangesAsync();
+        //    return user;
+        //}
 
-        public async Task<User> GetUserByIdAsync(Guid userId)
-        {
-            return await _context.Users.FindAsync(userId);
-        }
+        //public async Task<User> GetUserByIdAsync(Guid userId)
+        //{
+        //    return await _context.Users.FindAsync(userId);
+        //}
 
-        public async Task<List<Task>> GetAllTasksAsync()
-        {
-            return await _context.Tasks.Include(t => t.User).ToListAsync();
-        }
+        //public async Task<List<Task>> GetAllTasksAsync()
+        //{
+        //    return await _context.Tasks.Include(t => t.User).ToListAsync();
+        //}
 
-        public async Task<bool> UserExistsAsync(Guid userId)
-        {
-            return await _context.Users.AnyAsync(u => u.UserId == userId);
-        }
+        //public async Task<bool> UserExistsAsync(Guid userId)
+        //{
+        //    return await _context.Users.AnyAsync(u => u.UserId == userId);
+        //}
 
         public async Task<Task> AssignTaskAsync(Task task)
         {
@@ -47,23 +48,28 @@ namespace Task_Management_System_API_1.Repositories
 
         public async Task<bool> DeactivateUserAsync(Guid userId)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
-            if (user == null) return false;
+            //var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+            //if (user == null) return false;
 
-            user.IsActive = false;
-            _context.Users.Update(user);
-            await _context.SaveChangesAsync();
-            return true;
+            //user.IsActive = false;
+            //_context.Users.Update(user);
+            //await _context.SaveChangesAsync();
+            //return true;
+
+            return false;
         }
 
         public async Task<bool> DeleteUserAsync(Guid userId)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
-            if (user == null) return false;
+            //var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+            //if (user == null) return false;
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-            return true;
+            //_context.Users.Remove(user);
+            //await _context.SaveChangesAsync();
+            //return true;
+
+            return false;
+
         }
     }
 }
