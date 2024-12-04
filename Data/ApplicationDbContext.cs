@@ -12,6 +12,5 @@ namespace Task_Management_System_API_1.Data
         }
         public DbSet<Task> Tasks { get; set; }
         public DbSet<UserTask> UserTasks { get; set; }
-        public DbSet<UserRole> UserRoles { get; set; }
     }
 }

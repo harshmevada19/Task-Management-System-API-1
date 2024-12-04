@@ -10,6 +10,7 @@ namespace Task_Management_System_API_1.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class AccountController : ControllerBase
     {
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -22,8 +23,9 @@ namespace Task_Management_System_API_1.Controllers
             _roleManager = roleManager;
             _userManager = userManager;
             _applicationDbContext = applicationDbContext;
-
         }
+
+        //Role
         [Authorize]
         [HttpPost("add-role")]
         public async Task<IActionResult> AddRole([FromBody] string role)
@@ -62,76 +64,311 @@ namespace Task_Management_System_API_1.Controllers
         }
 
         [Authorize]
-        [HttpPost("create-task")]
-        public IActionResult CreateTask(TaskViewModel taskViewModel)
+        [HttpPut("update-role")]
+        public async Task<IActionResult> UpdateRole(string oldRoleName, string newRoleName)
         {
-            // Check if the user has the Admin role
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            // Fetch RoleId(s) for the UserId from AspNetUserRoles
-            //var sfdf = _applicationDbContext.UserRoles.Where(ur => ur.Username == userId).Select(ur => ur.Role).FirstOrDefaultAsync();
-
-            var roles = _applicationDbContext.Database
-                .SqlQueryRaw<string>("SELECT RoleId FROM AspNetUserRoles WHERE UserId = @p0", userId).ToString();
-
-            //var roles = context.Database.SqlQuery<string>("SELECT RoleId FROM AspNetUserRoles WHERE UserId = @p0", userId).ToList();
-
-            if (ModelState.IsValid)
+            if (string.IsNullOrWhiteSpace(oldRoleName) || string.IsNullOrWhiteSpace(newRoleName))
             {
-                // Step 1: Create a new Task entity from TaskViewModel
-                var task = new Task
-                {
-                    TaskId = Guid.NewGuid(),
-                    Title = taskViewModel.Title,
-                    Description = taskViewModel.Description,
-                    DueDate = taskViewModel.DueDate,
-                    Status = taskViewModel.Status,
-                    CreatedBy = taskViewModel.CreatedBy,
-
-                };
-
-                // Step 2: Add the Task to the database
-                _applicationDbContext.Tasks.Add(task);
-                _applicationDbContext.SaveChanges();
-
-                // Step 3: Create UserTask entries for the UserIds
-                if (taskViewModel.UserIds != null && taskViewModel.UserIds.Any())
-                {
-                    foreach (var id in taskViewModel.UserIds)
-                    {
-                        if (roles == "73936166-128e-483a-95fc-3ce7dfb29382")
-                        {
-                            var userTask = new UserTask
-                            {
-                                UserId = id,
-                                TaskId = task.TaskId,
-                            };
-                            _applicationDbContext.UserTasks.Add(userTask);
-                        }
-                        else
-                        {
-                            return Unauthorized("You are not authorized to create a task.");
-                        }
-                    }
-
-                    _applicationDbContext.SaveChanges();
-                }
-                return CreatedAtAction(nameof(GetTaskById), new { id = task.TaskId }, task);
+                return BadRequest(new { message = "Both oldRoleName and newRoleName are required." });
             }
 
-            return BadRequest(ModelState);
-        }
-        [HttpGet("{id}")]
-        public IActionResult GetTaskById(Guid id)
-        {
-            var task = _applicationDbContext.Tasks.FirstOrDefault(t => t.TaskId == id);
-            if (task == null)
+            var role = await _roleManager.FindByNameAsync(oldRoleName);
+            if (role == null)
             {
-                return NotFound();
+                return NotFound(new { message = $"Role '{oldRoleName}' not found." });
             }
 
-            return Ok(task);
+            role.Name = newRoleName;
+            var result = await _roleManager.UpdateAsync(role);
+
+            if (result.Succeeded)
+            {
+                return Ok(new { message = "Role updated successfully." });
+            }
+
+            return BadRequest(result.Errors);
         }
 
+        [Authorize]
+        [HttpDelete("delete-role/{roleName}")]
+        public async Task<IActionResult> DeleteRole(string roleName)
+        {
+            if (string.IsNullOrWhiteSpace(roleName))
+            {
+                return BadRequest(new { message = "Role name is required." });
+            }
+
+            var role = await _roleManager.FindByNameAsync(roleName);
+            if (role == null)
+            {
+                return NotFound(new { message = $"Role '{roleName}' not found." });
+            }
+
+            var result = await _roleManager.DeleteAsync(role);
+            if (result.Succeeded)
+            {
+                return Ok(new { message = $"Role '{roleName}' deleted successfully." });
+            }
+
+            return BadRequest(result.Errors);
+        }
+
+
+
+
+        // Add Claims to a User
+        [Authorize]
+        [HttpPost("AddClaim")]
+        public async Task<IActionResult> AddClaimToUser([FromBody] AddClaimRequest request)
+        {
+            var user = await _userManager.FindByIdAsync(request.UserId);
+            if (user == null)
+            {
+                return NotFound(new { Message = "User not found." });
+            }
+
+            var claims = new[]
+            {
+                new Claim(request.ClaimType, request.ClaimValue)
+            };
+
+            var result = await _userManager.AddClaimsAsync(user, claims);
+
+            if (result.Succeeded)
+            {
+                return Ok(new { Message = "Claims added successfully." });
+            }
+
+            return BadRequest(new { Message = "Failed to add claims.", Errors = result.Errors });
+        }
+
+        [Authorize]
+        [HttpGet("GetClaims")]
+        public IActionResult GetUserClaims()
+        {
+            var user = HttpContext.User;
+
+            if (user?.Identity?.IsAuthenticated != true)
+            {
+                return Unauthorized(new { Message = "User is not authenticated." });
+            }
+
+            var claims = user.Claims.Select(c => new
+            {
+                Type = c.Type,
+                Value = c.Value
+            });
+
+            return Ok(new { Claims = claims });
+        }
+
+        [Authorize]
+        [HttpGet("GetAllClaims/{userId}")]
+        public async Task<IActionResult> GetAllClaims(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new { Message = "User not found." });
+            }
+
+            var claims = await _userManager.GetClaimsAsync(user);
+            var response = claims.Select(c => new
+            {
+                Type = c.Type,
+                Value = c.Value
+            });
+
+            return Ok(new { Claims = response });
+        }
+
+        [Authorize]
+        [HttpPut("UpdateClaim")]
+        public async Task<IActionResult> UpdateUserClaim([FromBody] UpdateClaimRequest request)
+        {
+            var user = await _userManager.FindByIdAsync(request.UserId);
+            if (user == null)
+            {
+                return NotFound(new { Message = "User not found." });
+            }
+
+            var existingClaims = await _userManager.GetClaimsAsync(user);
+            var oldClaim = existingClaims.FirstOrDefault(c => c.Type == request.OldClaimType && c.Value == request.OldClaimValue);
+
+            if (oldClaim == null)
+            {
+                return NotFound(new { Message = "Claim not found." });
+            }
+
+            var removeResult = await _userManager.RemoveClaimAsync(user, oldClaim);
+            if (!removeResult.Succeeded)
+            {
+                return BadRequest(new { Message = "Failed to remove the old claim.", Errors = removeResult.Errors });
+            }
+
+            var addResult = await _userManager.AddClaimAsync(user, new Claim(request.NewClaimType, request.NewClaimValue));
+            if (addResult.Succeeded)
+            {
+                return Ok(new { Message = "Claim updated successfully." });
+            }
+
+            return BadRequest(new { Message = "Failed to update claim.", Errors = addResult.Errors });
+        }
+
+        [Authorize]
+        [HttpDelete("DeleteClaim")]
+        public async Task<IActionResult> DeleteUserClaim([FromBody] DeleteClaimRequest request)
+        {
+            var user = await _userManager.FindByIdAsync(request.UserId);
+            if (user == null)
+            {
+                return NotFound(new { Message = "User not found." });
+            }
+
+            var existingClaims = await _userManager.GetClaimsAsync(user);
+            var claimToDelete = existingClaims.FirstOrDefault(c => c.Type == request.ClaimType && c.Value == request.ClaimValue);
+
+            if (claimToDelete == null)
+            {
+                return NotFound(new { Message = "Claim not found." });
+            }
+
+            var result = await _userManager.RemoveClaimAsync(user, claimToDelete);
+
+            if (result.Succeeded)
+            {
+                return Ok(new { Message = "Claim deleted successfully." });
+            }
+
+            return BadRequest(new { Message = "Failed to delete claim.", Errors = result.Errors });
+        }
+
+
+
+        // Add a Claim to a Role
+
+        [HttpPost("add-role-claim")]
+        public async Task<IActionResult> AddClaimToRole([FromBody] RoleClaimModel model)
+        {
+            var role = await _roleManager.FindByIdAsync(model.RoleId);
+            if (role == null)
+            {
+                return NotFound($"Role with ID '{model.RoleId}' not found.");
+            }
+
+            var claim = new Claim(model.ClaimType, model.ClaimValue);
+            var result = await _roleManager.AddClaimAsync(role, claim);
+
+            if (result.Succeeded)
+            {
+                return Ok($"Claim '{model.ClaimType}: {model.ClaimValue}' added to role with ID '{model.RoleId}'.");
+            }
+
+            return BadRequest(result.Errors);
+        }
+
+        [HttpGet("get-all-role-claims/{roleId}")]
+        public async Task<IActionResult> GetAllClaimsForRole(string roleId)
+        {
+            var role = await _roleManager.FindByIdAsync(roleId);
+            if (role == null)
+            {
+                return NotFound($"Role with ID '{roleId}' not found.");
+            }
+
+            var claims = await _roleManager.GetClaimsAsync(role);
+            var response = claims.Select(c => new
+            {
+                Type = c.Type,
+                Value = c.Value
+            });
+
+            return Ok(new { RoleId = roleId, Claims = response });
+        }
+
+        [HttpGet("get-role-claim/{roleId}/{claimType}")]
+        public async Task<IActionResult> GetClaimByType(string roleId, string claimType)
+        {
+            var role = await _roleManager.FindByIdAsync(roleId);
+            if (role == null)
+            {
+                return NotFound($"Role with ID '{roleId}' not found.");
+            }
+
+            var claims = await _roleManager.GetClaimsAsync(role);
+            var matchingClaims = claims.Where(c => c.Type == claimType).Select(c => new
+            {
+                Type = c.Type,
+                Value = c.Value
+            });
+
+            if (!matchingClaims.Any())
+            {
+                return NotFound($"No claims of type '{claimType}' found for role with ID '{roleId}'.");
+            }
+
+            return Ok(new { RoleId = roleId, Claims = matchingClaims });
+        }
+
+        [HttpPut("update-role-claim")]
+        public async Task<IActionResult> UpdateRoleClaim([FromBody] UpdateRoleClaimModel model)
+        {
+            var role = await _roleManager.FindByIdAsync(model.RoleId);
+            if (role == null)
+            {
+                return NotFound($"Role with ID '{model.RoleId}' not found.");
+            }
+
+            var claims = await _roleManager.GetClaimsAsync(role);
+            var oldClaim = claims.FirstOrDefault(c => c.Type == model.OldClaimType && c.Value == model.OldClaimValue);
+
+            if (oldClaim == null)
+            {
+                return NotFound($"Claim '{model.OldClaimType}: {model.OldClaimValue}' not found in role with ID '{model.RoleId}'.");
+            }
+
+            var removeResult = await _roleManager.RemoveClaimAsync(role, oldClaim);
+            if (!removeResult.Succeeded)
+            {
+                return BadRequest(new { Message = "Failed to remove the old claim.", Errors = removeResult.Errors });
+            }
+
+            var newClaim = new Claim(model.NewClaimType, model.NewClaimValue);
+            var addResult = await _roleManager.AddClaimAsync(role, newClaim);
+
+            if (addResult.Succeeded)
+            {
+                return Ok($"Claim updated successfully for role with ID '{model.RoleId}'.");
+            }
+
+            return BadRequest(new { Message = "Failed to add the new claim.", Errors = addResult.Errors });
+        }
+
+        [HttpDelete("delete-role-claim")]
+        public async Task<IActionResult> DeleteRoleClaim([FromBody] RoleClaimModel model)
+        {
+            var role = await _roleManager.FindByIdAsync(model.RoleId);
+            if (role == null)
+            {
+                return NotFound($"Role with ID '{model.RoleId}' not found.");
+            }
+
+            var claims = await _roleManager.GetClaimsAsync(role);
+            var claimToDelete = claims.FirstOrDefault(c => c.Type == model.ClaimType && c.Value == model.ClaimValue);
+
+            if (claimToDelete == null)
+            {
+                return NotFound($"Claim '{model.ClaimType}: {model.ClaimValue}' not found for role with ID '{model.RoleId}'.");
+            }
+
+            var result = await _roleManager.RemoveClaimAsync(role, claimToDelete);
+
+            if (result.Succeeded)
+            {
+                return Ok($"Claim '{model.ClaimType}: {model.ClaimValue}' deleted from role with ID '{model.RoleId}'.");
+            }
+
+            return BadRequest(new { Message = "Failed to delete claim.", Errors = result.Errors });
+        }
     }
 }

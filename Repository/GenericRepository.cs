@@ -1,46 +1,34 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Task_Management_System_API_1.Data;
 
 namespace Task_Management_System_API_1.Repositories
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _applicationDbContext;
         private readonly DbSet<T> _dbSet;
 
-        public GenericRepository(ApplicationDbContext context)
+        public GenericRepository(ApplicationDbContext applicationDbContext)
         {
-            _context = context;
-            _dbSet = context.Set<T>();
+            _applicationDbContext  = applicationDbContext;
+            _dbSet = applicationDbContext.Set<T>();
         }
-
-        //public async Task<T> CreateAsync(T entity)
-        //{
-        //    await _dbSet.AddAsync(entity);
-        //    await _context.SaveChangesAsync();
-        //    return entity;
-        //}
-
+        public async Task<T> CreateAsync(T entity)
+        {
+            await _dbSet.AddAsync(entity);
+            await _applicationDbContext.SaveChangesAsync();
+            return entity;
+        }
         public async Task<T> GetByIdAsync(Guid id)
         {
             return await _dbSet.FindAsync(id);
         }
-
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public async Task<T> UpdateAsync(T entity)
         {
-            return await _dbSet.ToListAsync();
+            var resultObj = _dbSet.Update(entity).Entity;
+            var result = await _applicationDbContext.SaveChangesAsync();
+            return resultObj;
         }
-
-        public async Task<bool> UpdateAsync(T entity)
-        {
-            _dbSet.Update(entity);
-            var result = await _context.SaveChangesAsync();
-            return result > 0;
-        }
-
         public async Task<bool> DeleteAsync(Guid id)
         {
             var entity = await _dbSet.FindAsync(id);
@@ -48,7 +36,7 @@ namespace Task_Management_System_API_1.Repositories
                 return false;
 
             _dbSet.Remove(entity);
-            var result = await _context.SaveChangesAsync();
+            var result = await _applicationDbContext.SaveChangesAsync();
             return result > 0;
         }
     }

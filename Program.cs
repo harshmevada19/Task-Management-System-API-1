@@ -5,9 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using Microsoft.Extensions.DependencyInjection;
 using Task_Management_System_API_1.Data;
-using Task_Management_System_API_1.Services;
 using Task_Management_System_API_1.Repositories;
 
 namespace Task_Management_System_API_1
@@ -50,6 +48,14 @@ namespace Task_Management_System_API_1
                     .AddDefaultTokenProviders()
                     .AddApiEndpoints();
 
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("ViewDataPolicy", policy =>
+                    policy.RequireClaim("Permission", "ViewData")
+                          .RequireRole("Admin", "Manager"));
+            });
+
+
             // Add DbContext for ApplicationDbContext
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("TaskDBLocalConnection")));
@@ -58,8 +64,7 @@ namespace Task_Management_System_API_1
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             //Add Services
-            builder.Services.AddScoped<IAdminRepository, AdminRepository>();
-            builder.Services.AddScoped<IAdminService, AdminService>();
+            builder.Services.AddTransient<IGenericRepository<Task>, GenericRepository<Task>>();
             builder.Services.AddScoped<ITaskRepository, TaskRepository>();
             builder.Services.AddScoped<ITaskService, TaskService>();
 
