@@ -7,6 +7,8 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using Task_Management_System_API_1.Data;
 using Task_Management_System_API_1.Repositories;
+using Task_Management_System_API_1.Repository;
+using Task_Management_System_API_1.Services;
 
 namespace Task_Management_System_API_1
 {
@@ -65,8 +67,11 @@ namespace Task_Management_System_API_1
 
             //Add Services
             builder.Services.AddTransient<IGenericRepository<Task>, GenericRepository<Task>>();
+            builder.Services.AddTransient<IGenericRepository<Task>, GenericRepository<Task>>();
             builder.Services.AddScoped<ITaskRepository, TaskRepository>();
             builder.Services.AddScoped<ITaskService, TaskService>();
+            builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+            builder.Services.AddScoped<IAccountService, AccountService>();
 
             // Add Controllers
             builder.Services.AddControllers();
