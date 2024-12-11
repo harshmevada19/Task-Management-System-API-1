@@ -67,7 +67,6 @@ namespace Task_Management_System_API_1
 
             //Add Services
             builder.Services.AddTransient<IGenericRepository<Task>, GenericRepository<Task>>();
-            builder.Services.AddTransient<IGenericRepository<Task>, GenericRepository<Task>>();
             builder.Services.AddScoped<ITaskRepository, TaskRepository>();
             builder.Services.AddScoped<ITaskService, TaskService>();
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();

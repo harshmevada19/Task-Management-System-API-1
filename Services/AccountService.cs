@@ -75,7 +75,6 @@ namespace Task_Management_System_API_1.Services
             }
             catch (Exception ex)
             {
-                // Log the exception (e.g., to a logging service or file)
                 Console.WriteLine($"Error in AddClaimToUserAsync: {ex.Message}");
                 throw;
             }
@@ -89,7 +88,6 @@ namespace Task_Management_System_API_1.Services
             }
             catch (Exception ex)
             {
-                // Log the exception
                 Console.WriteLine($"Error in GetAllClaimsAsync: {ex.Message}");
                 throw;
             }
@@ -103,7 +101,6 @@ namespace Task_Management_System_API_1.Services
             }
             catch (Exception ex)
             {
-                // Log the exception
                 Console.WriteLine($"Error in UpdateClaimAsync: {ex.Message}");
                 throw;
             }
@@ -117,7 +114,6 @@ namespace Task_Management_System_API_1.Services
             }
             catch (Exception ex)
             {
-                // Log the exception
                 Console.WriteLine($"Error in DeleteClaimAsync: {ex.Message}");
                 throw;
             }
@@ -134,8 +130,7 @@ namespace Task_Management_System_API_1.Services
             }
             catch (Exception ex)
             {
-                // Log the exception (optional)
-                return false; // You can customize this based on the exception type
+                return false; 
             }
         }
 
@@ -147,8 +142,7 @@ namespace Task_Management_System_API_1.Services
             }
             catch (Exception ex)
             {
-                // Log the exception (optional)
-                return null; // Return null if there is an error
+                return null; 
             }
         }
 
@@ -160,8 +154,7 @@ namespace Task_Management_System_API_1.Services
             }
             catch (Exception ex)
             {
-                // Log the exception (optional)
-                return null; // Return null if there is an error
+                return null; 
             }
         }
 
@@ -174,8 +167,7 @@ namespace Task_Management_System_API_1.Services
             }
             catch (Exception ex)
             {
-                // Log the exception (optional)
-                return false; // Return false if an error occurs
+                return false; 
             }
         }
 
@@ -187,8 +179,7 @@ namespace Task_Management_System_API_1.Services
             }
             catch (Exception ex)
             {
-                // Log the exception (optional)
-                return false; // Return false if deletion fails
+                return false; 
             }
         }
     }

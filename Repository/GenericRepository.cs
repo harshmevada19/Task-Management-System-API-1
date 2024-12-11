@@ -23,11 +23,6 @@ namespace Task_Management_System_API_1.Repositories
         {
             return await _dbSet.FindAsync(id);
         }
-        public async Task<IEnumerable<T>> GetAllAsync()
-        {
-            return await _dbSet.ToListAsync();
-        }
-
         public async Task<T> UpdateAsync(T entity)
         {
             var resultObj = _dbSet.Update(entity).Entity;
