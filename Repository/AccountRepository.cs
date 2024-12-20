@@ -43,8 +43,6 @@ namespace Task_Management_System_API_1.Repository
             await _applicationDbContext.SaveChangesAsync();
             return result;
         }
-
-
         public async Task<IdentityResult> UpdateRoleAsync(string oldRoleName, string newRoleName)
         {
             var role = await _roleManager.FindByNameAsync(oldRoleName);
@@ -58,7 +56,6 @@ namespace Task_Management_System_API_1.Repository
             await _applicationDbContext.SaveChangesAsync();
             return result;
         }
-
         public async Task<IdentityResult> DeleteRoleAsync(string roleName)
         {
             var role = await _roleManager.FindByNameAsync(roleName);
@@ -105,7 +102,6 @@ namespace Task_Management_System_API_1.Repository
 
             return await _userManager.AddClaimAsync(user, newClaim);
         }
-
         public async Task<IdentityResult> DeleteClaimAsync(string userId, string claimType, string claimValue)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -144,7 +140,6 @@ namespace Task_Management_System_API_1.Repository
             var claims = await _roleManager.GetClaimsAsync(role);
             return claims.Where(c => c.Type == claimType);
         }
-
         public async Task<bool> UpdateRoleClaimAsync(string roleId, string oldClaimType, string oldClaimValue, string newClaimType, string newClaimValue)
         {
             var role = await _roleManager.FindByIdAsync(roleId);
@@ -165,7 +160,6 @@ namespace Task_Management_System_API_1.Repository
 
             return addResult.Succeeded;
         }
-
         public async Task<bool> DeleteClaimFromRoleAsync(string roleId, string claimType, string claimValue)
         {
             var role = await _roleManager.FindByIdAsync(roleId);
